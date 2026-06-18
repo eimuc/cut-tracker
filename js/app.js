@@ -473,12 +473,19 @@ function renderWorkoutDay() {
 }
 
 function renderSetRow(ex, i, kg, reps, done) {
-  const rowStyle = done ? 'opacity:.5' : '';
+  const rowStyle = done ? 'opacity:.4' : '';
+  // Get prev session hint
+  const prevKey = getPrevWorkoutKey(activeWorkoutDay, todayStr());
+  const prevSets = prevKey ? (workoutLog[prevKey]?.exercises?.[ex.id] || []) : [];
+  const prevKg = prevSets[i]?.kg || '';
+  const prevReps = prevSets[i]?.reps || '';
+  const kgPlaceholder = prevKg ? prevKg : '—';
+  const repsPlaceholder = prevReps ? prevReps : '—';
   return `<tr style="${rowStyle}">
-    <td style="color:var(--text2);font-size:13px;width:24px">${i+1}</td>
-    ${!ex.bodyweight ? `<td><input class="set-input" type="number" inputmode="decimal" value="${kg || ''}" placeholder="kg"
+    <td style="color:var(--text3);font-size:13px;width:24px">${i+1}</td>
+    ${!ex.bodyweight ? `<td><input class="set-input" type="number" inputmode="decimal" value="${kg || ''}" placeholder="${kgPlaceholder}"
       oninput="updateSet('${ex.id}', ${i}, 'kg', this.value)"></td>` : ''}
-    <td><input class="set-input" type="number" inputmode="numeric" value="${reps || ''}" placeholder="reps"
+    <td><input class="set-input" type="number" inputmode="numeric" value="${reps || ''}" placeholder="${repsPlaceholder}"
       oninput="updateSet('${ex.id}', ${i}, 'reps', this.value)"></td>
     <td style="width:36px;text-align:center">
       <button class="done-btn ${done ? 'done-active' : ''}" onclick="toggleSetDone('${ex.id}',${i})">
@@ -584,9 +591,16 @@ function getExerciseProgress(exId, today) {
 }
 
 // ==================== WEIGHT ====================
+function formatDateInput(el) {
+  let v = el.value.replace(/[^0-9]/g, '');
+  if (v.length >= 5) v = v.slice(0,4) + '-' + v.slice(4);
+  if (v.length >= 8) v = v.slice(0,7) + '-' + v.slice(7);
+  el.value = v.slice(0,10);
+}
+
 function renderWeight() {
   const today = todayStr();
-  document.getElementById('weightDate').value = today;
+  const wdEl = document.getElementById('weightDate'); if (!wdEl.value) wdEl.value = today;
 
   const logs = [...weightLog].sort((a, b) => b.date.localeCompare(a.date));
   const config2 = config;

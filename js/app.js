@@ -1,310 +1,166 @@
 // ==================== SUPABASE ====================
-const SB_URL = "https://kcjydkorcohwcnwwncjb.supabase.co";
-const SB_KEY = "sb_publishable_DbckVKe1MyV14uoNBneM6g_cv7mBIpt";
+const SB_URL = 'https://kcjydkorcohwcnwwncjb.supabase.co';
+const SB_KEY = 'sb_publishable_DbckVKe1MyV14uoNBneM6g_cv7mBIpt';
 
 async function sbGet(id) {
   try {
-    const r = await fetch(
-      `${SB_URL}/rest/v1/app_data?id=eq.${id}&select=data`,
-      {
-        headers: { apikey: SB_KEY, Authorization: "Bearer " + SB_KEY },
-      },
-    );
+    const r = await fetch(`${SB_URL}/rest/v1/app_data?id=eq.${id}&select=data`, {
+      headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
+    });
     const rows = await r.json();
     return rows && rows[0] ? rows[0].data : null;
-  } catch (e) {
-    console.warn("sbGet failed", e);
-    return null;
-  }
+  } catch(e) { console.warn('sbGet failed', e); return null; }
 }
 
 async function sbSet(id, data) {
   try {
     await fetch(`${SB_URL}/rest/v1/app_data`, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        apikey: SB_KEY,
-        Authorization: "Bearer " + SB_KEY,
-        "Content-Type": "application/json",
-        Prefer: "resolution=merge-duplicates",
+        'apikey': SB_KEY,
+        'Authorization': 'Bearer ' + SB_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=merge-duplicates'
       },
-      body: JSON.stringify({ id, data, updated_at: new Date().toISOString() }),
+      body: JSON.stringify({ id, data, updated_at: new Date().toISOString() })
     });
-  } catch (e) {
-    console.warn("sbSet failed", e);
-  }
+  } catch(e) { console.warn('sbSet failed', e); }
 }
 
 async function syncToCloud() {
-  await sbSet("config", config);
-  await sbSet("dailyLog", dailyLog);
-  await sbSet("workoutLog", workoutLog);
-  await sbSet("weightLog", weightLog);
-  showToast("☁️ Išsaugota debesyje");
+  await sbSet('config', config);
+  await sbSet('dailyLog', dailyLog);
+  await sbSet('workoutLog', workoutLog);
+  await sbSet('weightLog', weightLog);
+  showToast('☁️ Išsaugota debesyje');
 }
 
 async function loadFromCloud() {
   const [cfg, dl, wl, wlog] = await Promise.all([
-    sbGet("config"),
-    sbGet("dailyLog"),
-    sbGet("workoutLog"),
-    sbGet("weightLog"),
+    sbGet('config'), sbGet('dailyLog'), sbGet('workoutLog'), sbGet('weightLog')
   ]);
-  if (cfg) {
-    config = cfg;
-    save("config", config);
-  }
-  if (dl) {
-    dailyLog = dl;
-    save("dailyLog", dailyLog);
-  }
-  if (wl) {
-    workoutLog = wl;
-    save("workoutLog", workoutLog);
-  }
-  if (wlog) {
-    weightLog = wlog;
-    save("weightLog", weightLog);
-  }
+  if (cfg) { config = cfg; save('config', config); }
+  if (dl) { dailyLog = dl; save('dailyLog', dailyLog); }
+  if (wl) { workoutLog = wl; save('workoutLog', workoutLog); }
+  if (wlog) { weightLog = wlog; save('weightLog', weightLog); }
   return !!cfg;
 }
 
 // ==================== DATA ====================
 const TRAINING_PLAN = {
   monday: {
-    label: "Pirmadienis",
-    emoji: "🔥",
-    focus: "Push + Abs",
+    label: 'Pirmadienis',
+    emoji: '🔥',
+    focus: 'Push + Abs',
     sections: [
       {
-        name: "🏋️ Jėga",
+        name: '🏋️ Jėga',
         exercises: [
-          {
-            id: "bar_dips",
-            name: "Bar Dips",
-            target: "4 × 6–10",
-            bodyweight: true,
-          },
-          {
-            id: "push_ups",
-            name: "Push Ups",
-            target: "3 × 20–30",
-            bodyweight: true,
-          },
-          {
-            id: "floor_press",
-            name: "Dumbbell Floor Press",
-            target: "3 × 10–12",
-            hint: "15–20 kg",
-          },
-          {
-            id: "shoulder_press",
-            name: "Dumbbell Shoulder Press",
-            target: "3 × 10–12",
-            hint: "10–14 kg",
-          },
-          {
-            id: "lateral_raises",
-            name: "Dumbbell Lateral Raises",
-            target: "3 × 12–15",
-            hint: "4–7 kg",
-          },
-        ],
+          { id: 'bar_dips', name: 'Bar Dips', target: '4 × 6–10', bodyweight: true },
+          { id: 'push_ups', name: 'Push Ups', target: '3 × 20–30', bodyweight: true },
+          { id: 'floor_press', name: 'Dumbbell Floor Press', target: '3 × 10–12', hint: '15–20 kg' },
+          { id: 'shoulder_press', name: 'Dumbbell Shoulder Press', target: '3 × 10–12', hint: '10–14 kg' },
+          { id: 'lateral_raises', name: 'Dumbbell Lateral Raises', target: '3 × 12–15', hint: '4–7 kg' },
+        ]
       },
       {
-        name: "🧱 Abs",
+        name: '🧱 Abs',
         exercises: [
-          { id: "plank", name: "Plank", target: "3 × 45–60 sek", time: true },
-          {
-            id: "leg_raises",
-            name: "Leg Raises",
-            target: "3 × 12–15",
-            bodyweight: true,
-          },
-        ],
-      },
-    ],
+          { id: 'plank', name: 'Plank', target: '3 × 45–60 sek', time: true },
+          { id: 'leg_raises', name: 'Leg Raises', target: '3 × 12–15', bodyweight: true },
+        ]
+      }
+    ]
   },
   wednesday: {
-    label: "Trečiadienis",
-    emoji: "🔥",
-    focus: "Pull + Legs",
+    label: 'Trečiadienis',
+    emoji: '🔥',
+    focus: 'Pull + Legs',
     sections: [
       {
-        name: "🧗 Pull",
+        name: '🧗 Pull',
         exercises: [
-          {
-            id: "pull_ups",
-            name: "Pull Ups",
-            target: "5 × 3–5",
-            bodyweight: true,
-          },
-          {
-            id: "chin_ups",
-            name: "Chin Ups",
-            target: "3 × max",
-            bodyweight: true,
-          },
-          {
-            id: "db_row",
-            name: "One Arm Dumbbell Row",
-            target: "4 × 10–12",
-            hint: "20–30 kg",
-          },
-          {
-            id: "bicep_curls",
-            name: "Dumbbell Bicep Curls",
-            target: "3 × 10–12",
-            hint: "8–14 kg",
-          },
-        ],
+          { id: 'pull_ups', name: 'Pull Ups', target: '5 × 3–5', bodyweight: true },
+          { id: 'chin_ups', name: 'Chin Ups', target: '3 × max', bodyweight: true },
+          { id: 'db_row', name: 'One Arm Dumbbell Row', target: '4 × 10–12', hint: '20–30 kg' },
+          { id: 'bicep_curls', name: 'Dumbbell Bicep Curls', target: '3 × 10–12', hint: '8–14 kg' },
+        ]
       },
       {
-        name: "🦵 Kojos",
+        name: '🦵 Kojos',
         exercises: [
-          {
-            id: "goblet_squat",
-            name: "Goblet Squats",
-            target: "4 × 10–15",
-            hint: "20–35 kg",
-          },
-          {
-            id: "rdl",
-            name: "Dumbbell Romanian Deadlift",
-            target: "3 × 10–12",
-            hint: "20–35 kg",
-          },
-        ],
+          { id: 'goblet_squat', name: 'Goblet Squats', target: '4 × 10–15', hint: '20–35 kg' },
+          { id: 'rdl', name: 'Dumbbell Romanian Deadlift', target: '3 × 10–12', hint: '20–35 kg' },
+        ]
       },
       {
-        name: "🧱 Abs",
+        name: '🧱 Abs',
         exercises: [
-          {
-            id: "hanging_knee",
-            name: "Hanging Knee Raises",
-            target: "3 × 10–15",
-            bodyweight: true,
-          },
-        ],
-      },
-    ],
+          { id: 'hanging_knee', name: 'Hanging Knee Raises', target: '3 × 10–15', bodyweight: true },
+        ]
+      }
+    ]
   },
   friday: {
-    label: "Penktadienis",
-    emoji: "🔥",
-    focus: "Full Body",
+    label: 'Penktadienis',
+    emoji: '🔥',
+    focus: 'Full Body',
     sections: [
       {
-        name: "🏋️ Jėga",
+        name: '🏋️ Jėga',
         exercises: [
-          {
-            id: "pull_ups_fri",
-            name: "Pull Ups",
-            target: "3 × max",
-            bodyweight: true,
-          },
-          {
-            id: "bar_dips_fri",
-            name: "Bar Dips",
-            target: "3 × max",
-            bodyweight: true,
-          },
-          {
-            id: "push_ups_fri",
-            name: "Push Ups",
-            target: "3 × max",
-            bodyweight: true,
-          },
-          {
-            id: "goblet_squat_fri",
-            name: "Goblet Squats",
-            target: "4 × 12–15",
-            hint: "20–35 kg",
-          },
-          {
-            id: "lunges",
-            name: "Dumbbell Lunges",
-            target: "3 × 10 k.k.",
-            hint: "10–16 kg",
-          },
-          {
-            id: "floor_press_fri",
-            name: "Dumbbell Floor Press",
-            target: "3 × 10–12",
-            hint: "15–22 kg",
-          },
-        ],
+          { id: 'pull_ups_fri', name: 'Pull Ups', target: '3 × max', bodyweight: true },
+          { id: 'bar_dips_fri', name: 'Bar Dips', target: '3 × max', bodyweight: true },
+          { id: 'push_ups_fri', name: 'Push Ups', target: '3 × max', bodyweight: true },
+          { id: 'goblet_squat_fri', name: 'Goblet Squats', target: '4 × 12–15', hint: '20–35 kg' },
+          { id: 'lunges', name: 'Dumbbell Lunges', target: '3 × 10 k.k.', hint: '10–16 kg' },
+          { id: 'floor_press_fri', name: 'Dumbbell Floor Press', target: '3 × 10–12', hint: '15–22 kg' },
+        ]
       },
       {
-        name: "🔥 Finisher",
+        name: '🔥 Finisher',
         exercises: [
-          {
-            id: "mountain_climbers",
-            name: "Mountain Climbers",
-            target: "3 × 30–45 sek",
-            time: true,
-          },
-        ],
-      },
-    ],
-  },
+          { id: 'mountain_climbers', name: 'Mountain Climbers', target: '3 × 30–45 sek', time: true },
+        ]
+      }
+    ]
+  }
 };
 
-const DAYS = ["monday", "wednesday", "friday"];
-const DAY_LABELS = {
-  monday: "Pirmad.",
-  wednesday: "Trečiad.",
-  friday: "Penktad.",
-};
+const DAYS = ['monday', 'wednesday', 'friday'];
+const DAY_LABELS = { monday: 'Pirmad.', wednesday: 'Trečiad.', friday: 'Penktad.' };
 
 // ==================== STORAGE ====================
 function load(key, def) {
-  try {
-    const v = localStorage.getItem(key);
-    return v ? JSON.parse(v) : def;
-  } catch {
-    return def;
-  }
+  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; } catch { return def; }
 }
-function save(key, val) {
+function save(key, val) { 
   localStorage.setItem(key, JSON.stringify(val));
   // Debounced cloud sync
   clearTimeout(window._syncTimer);
   window._syncTimer = setTimeout(() => syncToCloud(), 1500);
 }
 
-let config = load("config", null);
-let dailyLog = load("dailyLog", {}); // { 'YYYY-MM-DD': { checklist: {}, cardio: [] } }
-let workoutLog = load("workoutLog", {}); // { 'YYYY-MM-DD_day': { exercises: { id: [{kg, reps, secs}] } } }
-let weightLog = load("weightLog", []); // [{ date, kg }]
+let config = load('config', null);
+let dailyLog = load('dailyLog', {});       // { 'YYYY-MM-DD': { checklist: {}, cardio: [] } }
+let workoutLog = load('workoutLog', {});   // { 'YYYY-MM-DD_day': { exercises: { id: [{kg, reps, secs}] } } }
+let weightLog = load('weightLog', []);     // [{ date, kg }]
 
 // ==================== UTILS ====================
 function todayStr() {
   const d = new Date();
-  return d.toISOString().split("T")[0];
+  return d.toISOString().split('T')[0];
 }
 function formatDate(str) {
-  const d = new Date(str + "T00:00:00");
-  return d.toLocaleDateString("lt-LT", {
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-  });
+  const d = new Date(str + 'T00:00:00');
+  return d.toLocaleDateString('lt-LT', { weekday: 'short', month: 'short', day: 'numeric' });
 }
 function formatDateShort(str) {
-  const d = new Date(str + "T00:00:00");
-  return d.toLocaleDateString("lt-LT", { month: "short", day: "numeric" });
+  const d = new Date(str + 'T00:00:00');
+  return d.toLocaleDateString('lt-LT', { month: 'short', day: 'numeric' });
 }
 function getDayOfWeek() {
-  return [
-    "sunday",
-    "monday",
-    "tuesday",
-    "wednesday",
-    "thursday",
-    "friday",
-    "saturday",
-  ][new Date().getDay()];
+  return ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'][new Date().getDay()];
 }
 function isTodayTrainingDay() {
   return DAYS.includes(getDayOfWeek());
@@ -315,89 +171,63 @@ function todayTrainingDay() {
 }
 
 function showToast(msg) {
-  const t = document.getElementById("toast");
+  const t = document.getElementById('toast');
   t.textContent = msg;
-  t.classList.add("show");
-  setTimeout(() => t.classList.remove("show"), 2200);
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
 }
 
 // ==================== SETUP ====================
 function saveSetup() {
-  const sw = parseFloat(document.getElementById("setupStartWeight").value);
-  const gw = parseFloat(document.getElementById("setupGoalWeight").value);
-  const wk = parseInt(document.getElementById("setupWeeks").value);
-  const errEl = document.getElementById("setupError");
+  const sw = parseFloat(document.getElementById('setupStartWeight').value);
+  const gw = parseFloat(document.getElementById('setupGoalWeight').value);
+  const wk = parseInt(document.getElementById('setupWeeks').value);
+  const errEl = document.getElementById('setupError');
   if (isNaN(sw) || isNaN(gw) || isNaN(wk) || sw <= 0 || gw <= 0 || wk <= 0) {
-    if (errEl) {
-      errEl.style.display = "block";
-    }
+    if (errEl) { errEl.style.display = 'block'; }
     return;
   }
-  if (errEl) errEl.style.display = "none";
-  config = {
-    startWeight: sw,
-    goalWeight: gw,
-    weeks: wk,
-    startDate: todayStr(),
-  };
-  save("config", config);
-  document.getElementById("setupModal").style.display = "none";
+  if (errEl) errEl.style.display = 'none';
+  config = { startWeight: sw, goalWeight: gw, weeks: wk, startDate: todayStr() };
+  save('config', config);
+  document.getElementById('setupModal').style.display = 'none';
   renderAll();
 }
 
 // ==================== NAVIGATION ====================
 function showPage(name) {
-  document
-    .querySelectorAll(".page")
-    .forEach((p) => p.classList.remove("active"));
-  document
-    .querySelectorAll(".nav-btn")
-    .forEach((b) => b.classList.remove("active"));
-  document.getElementById("page" + name).classList.add("active");
-  const btns = document.querySelectorAll(".nav-btn");
-  const idx = [
-    "Dashboard",
-    "Workout",
-    "Weight",
-    "Progress",
-    "Settings",
-  ].indexOf(name);
-  if (idx >= 0) btns[idx].classList.add("active");
-  if (name === "Workout") renderWorkout();
-  if (name === "Weight") renderWeight();
-  if (name === "Progress") renderProgress();
-  if (name === "Settings") renderSettings();
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page' + name).classList.add('active');
+  const btns = document.querySelectorAll('.nav-btn');
+  const idx = ['Dashboard','Workout','Weight','Progress','Settings'].indexOf(name);
+  if (idx >= 0) btns[idx].classList.add('active');
+  if (name === 'Workout') renderWorkout();
+  if (name === 'Weight') renderWeight();
+  if (name === 'Progress') renderProgress();
+  if (name === 'Settings') renderSettings();
 }
 
 // ==================== DASHBOARD ====================
 function renderDashboard() {
   const today = todayStr();
-  const d = new Date(today + "T00:00:00");
-  document.getElementById("dashDate").textContent = d.toLocaleDateString(
-    "lt-LT",
-    {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    },
-  );
+  const d = new Date(today + 'T00:00:00');
+  document.getElementById('dashDate').textContent = d.toLocaleDateString('lt-LT', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+  });
 
   // Stats
-  const latestW = weightLog.length
-    ? weightLog[weightLog.length - 1].kg
-    : config?.startWeight || null;
+  const latestW = weightLog.length ? weightLog[weightLog.length - 1].kg : (config?.startWeight || null);
   const startW = config?.startWeight || null;
   const goalW = config?.goalWeight || null;
   const lost = startW && latestW ? +(startW - latestW).toFixed(1) : 0;
   const left = goalW && latestW ? +(latestW - goalW).toFixed(1) : 0;
 
   // Days elapsed
-  let dayNum = "—",
-    totalDays = "—";
+  let dayNum = '—', totalDays = '—';
   if (config?.startDate) {
-    const s = new Date(config.startDate + "T00:00:00");
-    const t = new Date(today + "T00:00:00");
+    const s = new Date(config.startDate + 'T00:00:00');
+    const t = new Date(today + 'T00:00:00');
     const diff = Math.floor((t - s) / 86400000) + 1;
     dayNum = Math.max(1, diff);
     totalDays = config.weeks * 7;
@@ -405,16 +235,15 @@ function renderDashboard() {
 
   // Streak
   let streak = 0;
-  const d2 = new Date(today + "T00:00:00");
+  const d2 = new Date(today + 'T00:00:00');
   for (let i = 0; i < 90; i++) {
-    const ds = d2.toISOString().split("T")[0];
+    const ds = d2.toISOString().split('T')[0];
     if (dailyLog[ds]?.completed) streak++;
     else break;
     d2.setDate(d2.getDate() - 1);
   }
 
-  document.getElementById("dashStreak").textContent =
-    streak > 0 ? `🔥 ${streak}` : "—";
+  document.getElementById('dashStreak').textContent = streak > 0 ? `🔥 ${streak}` : '—';
 
   const statsHTML = `
     <div class="stat-box">
@@ -423,103 +252,86 @@ function renderDashboard() {
     </div>
     <div class="stat-box">
       <div class="stat-label">Svoris</div>
-      <div class="stat-value">${latestW ? latestW + " kg" : "—"}</div>
+      <div class="stat-value">${latestW ? latestW + ' kg' : '—'}</div>
     </div>
     <div class="stat-box">
       <div class="stat-label">Numesta</div>
-      <div class="stat-value ${lost > 0 ? "stat-green" : ""}">${lost > 0 ? "−" + lost : "0"} <span style="font-size:14px">kg</span></div>
+      <div class="stat-value ${lost > 0 ? 'stat-green' : ''}">${lost > 0 ? '−' + lost : '0'} <span style="font-size:14px">kg</span></div>
     </div>
     <div class="stat-box">
       <div class="stat-label">Liko</div>
-      <div class="stat-value ${left > 0 ? "stat-accent" : "stat-green"}">${left > 0 ? left : "✓"} <span style="font-size:14px">${left > 0 ? "kg" : ""}</span></div>
+      <div class="stat-value ${left > 0 ? 'stat-accent' : 'stat-green'}">${left > 0 ? left : '✓'} <span style="font-size:14px">${left > 0 ? 'kg' : ''}</span></div>
     </div>
   `;
-  document.getElementById("dashStats").innerHTML = statsHTML;
+  document.getElementById('dashStats').innerHTML = statsHTML;
 
   // Progress bar
   if (startW && goalW && latestW) {
     const total = startW - goalW;
     const done = startW - latestW;
     const pct = Math.min(100, Math.max(0, (done / total) * 100));
-    document.getElementById("progressFill").style.width = pct + "%";
-    document.getElementById("progressStart").textContent = startW + " kg";
-    document.getElementById("progressCurrent").textContent = latestW + " kg";
-    document.getElementById("progressGoal").textContent = goalW + " kg";
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('progressStart').textContent = startW + ' kg';
+    document.getElementById('progressCurrent').textContent = latestW + ' kg';
+    document.getElementById('progressGoal').textContent = goalW + ' kg';
 
     // Expected weight
     if (config?.startDate && config?.weeks) {
       const totalDaysN = config.weeks * 7;
-      const s = new Date(config.startDate + "T00:00:00");
-      const t = new Date(today + "T00:00:00");
+      const s = new Date(config.startDate + 'T00:00:00');
+      const t = new Date(today + 'T00:00:00');
       const elapsed = Math.floor((t - s) / 86400000);
       const totalKg = startW - goalW;
-      const expected = +(startW - (totalKg * elapsed) / totalDaysN).toFixed(1);
-      document.getElementById("expectedVal").textContent = expected + " kg";
-      document.getElementById("expectedWeightBox").style.display = "flex";
-      const status = document.getElementById("expectedStatus");
-      if (latestW < expected) {
-        status.textContent = "✅";
-        status.title = "Lenki planą!";
-      } else if (latestW > expected + 0.5) {
-        status.textContent = "⚠️";
+      const expected = +(startW - (totalKg * elapsed / totalDaysN)).toFixed(1);
+      document.getElementById('expectedVal').textContent = expected + ' kg';
+      document.getElementById('expectedWeightBox').style.display = 'flex';
+      const status = document.getElementById('expectedStatus');
+      const diff = +(latestW - expected).toFixed(1);
+      if (diff < 0) {
+        status.innerHTML = `<span style="color:var(--green);font-size:13px;font-weight:800">${diff} kg<br><span style="font-size:10px">lenki planą</span></span>`;
+      } else if (diff > 0.3) {
+        status.innerHTML = `<span style="color:var(--red);font-size:13px;font-weight:800">+${diff} kg<br><span style="font-size:10px">atsilieki</span></span>`;
       } else {
-        status.textContent = "👍";
+        status.innerHTML = `<span style="color:var(--text2);font-size:13px;font-weight:800">= planą</span>`;
       }
     }
   }
 
   // Daily checklist
-  const todayDay = todayTrainingDay();
   const dl = dailyLog[today] || {};
   const checks = [
-    { id: "breakfast", label: "Pusryčiai", icon: "🍳" },
-    { id: "lunch", label: "Pietūs", icon: "🥗" },
-    { id: "dinner", label: "Vakarienė", icon: "🍽" },
-    { id: "diet", label: "Dietos laikiausi", icon: "✅" },
-    ...(todayDay
-      ? [
-          {
-            id: "workout",
-            label:
-              TRAINING_PLAN[todayDay].label +
-              " — " +
-              TRAINING_PLAN[todayDay].focus,
-            icon: "🏋️",
-          },
-        ]
-      : []),
-    { id: "cardio", label: "Cardio / Vaikščiojimas", icon: "🏃" },
+    { id: 'diet', label: 'Dietos laikiausi', icon: '✅' },
+    { id: 'workout', label: 'Sportas', icon: '🏋️' },
+    { id: 'cardio', label: 'Cardio / Vaikščiojimas', icon: '🏃' },
   ];
 
-  const checksDone = checks.every((c) => dl.checklist?.[c.id]);
-  let html = "";
+  const checksDone = checks.every(c => dl.checklist?.[c.id]);
+  let html = '';
   if (checksDone && checks.length > 0 && dl.checklist) {
     html += `<div class="complete-banner">🎯 Šiandien atlikai planą!</div>`;
   }
-  checks.forEach((c) => {
+  checks.forEach(c => {
     const done = dl.checklist?.[c.id];
-    html += `<div class="check-item ${done ? "checked" : ""}" onclick="toggleCheck('${c.id}')">
-      <div class="check-box">${done ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : ""}</div>
+    html += `<div class="check-item ${done ? 'checked' : ''}" onclick="toggleCheck('${c.id}')">
+      <div class="check-box">${done ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : ''}</div>
       <span class="check-icon">${c.icon}</span>
       <span class="check-label">${c.label}</span>
     </div>`;
   });
-  document.getElementById("dailyChecklist").innerHTML = html;
+  document.getElementById('dailyChecklist').innerHTML = html;
 
   // Week streak (last 7 days)
   const weekHTML = [];
   for (let i = 6; i >= 0; i--) {
-    const dd = new Date(today + "T00:00:00");
+    const dd = new Date(today + 'T00:00:00');
     dd.setDate(dd.getDate() - i);
-    const ds = dd.toISOString().split("T")[0];
-    const dayLabel = ["N", "P", "A", "T", "K", "Pn", "Š"][dd.getDay()];
+    const ds = dd.toISOString().split('T')[0];
+    const dayLabel = ['N','P','A','T','K','Pn','Š'][dd.getDay()];
     const done = dailyLog[ds]?.completed;
     const isToday = ds === today;
-    weekHTML.push(
-      `<div class="streak-dot ${done ? "done" : ""} ${isToday && !done ? "today" : ""}">${dayLabel}</div>`,
-    );
+    weekHTML.push(`<div class="streak-dot ${done ? 'done' : ''} ${isToday && !done ? 'today' : ''}">${dayLabel}</div>`);
   }
-  document.getElementById("weekStreak").innerHTML = weekHTML.join("");
+  document.getElementById('weekStreak').innerHTML = weekHTML.join('');
 }
 
 function toggleCheck(id) {
@@ -529,43 +341,33 @@ function toggleCheck(id) {
   dailyLog[today].checklist[id] = !dailyLog[today].checklist[id];
 
   // Check if all done
-  const todayDay = todayTrainingDay();
-  const checks = [
-    "breakfast",
-    "lunch",
-    "dinner",
-    "diet",
-    ...(todayDay ? ["workout"] : []),
-    "cardio",
-  ];
-  dailyLog[today].completed = checks.every((c) => dailyLog[today].checklist[c]);
+  const checks = ['diet','workout','cardio'];
+  dailyLog[today].completed = checks.every(c => dailyLog[today].checklist[c]);
 
-  save("dailyLog", dailyLog);
+  save('dailyLog', dailyLog);
   renderDashboard();
-  if (dailyLog[today].completed) showToast("🎯 Šiandien atlikai planą!");
+  if (dailyLog[today].completed) showToast('🎯 Šiandien atlikai planą!');
 }
 
 // ==================== WORKOUT ====================
 let activeWorkoutDay = null;
-let workoutSets = {}; // { exerciseId: [{kg, reps}] }
+let workoutSets = {};  // { exerciseId: [{kg, reps}] }
 
 function renderWorkout() {
   const today = todayStr();
-  document.getElementById("workoutDate").textContent = formatDate(today);
+  document.getElementById('workoutDate').textContent = formatDate(today);
 
-  // Default to today's day or first
-  const todayDay = todayTrainingDay();
-  if (!activeWorkoutDay) activeWorkoutDay = todayDay || "monday";
+  if (!activeWorkoutDay) activeWorkoutDay = 'monday';
 
   // Tabs
-  let tabsHTML = "";
-  DAYS.forEach((d) => {
+  let tabsHTML = '';
+  DAYS.forEach(d => {
     const plan = TRAINING_PLAN[d];
     const logKey = `${today}_${d}`;
     const hasLog = workoutLog[logKey];
-    tabsHTML += `<button class="day-tab ${d === activeWorkoutDay ? "active" : ""} ${hasLog ? "completed" : ""}" onclick="switchWorkoutDay('${d}')">${DAY_LABELS[d]}</button>`;
+    tabsHTML += `<button class="day-tab ${d === activeWorkoutDay ? 'active' : ''} ${hasLog ? 'completed' : ''}" onclick="switchWorkoutDay('${d}')">${plan.focus}</button>`;
   });
-  document.getElementById("dayTabs").innerHTML = tabsHTML;
+  document.getElementById('dayTabs').innerHTML = tabsHTML;
 
   renderWorkoutDay();
 }
@@ -574,9 +376,7 @@ function switchWorkoutDay(day) {
   activeWorkoutDay = day;
   const today = todayStr();
   const logKey = `${today}_${day}`;
-  workoutSets = workoutLog[logKey]?.exercises
-    ? JSON.parse(JSON.stringify(workoutLog[logKey].exercises))
-    : {};
+  workoutSets = workoutLog[logKey]?.exercises ? JSON.parse(JSON.stringify(workoutLog[logKey].exercises)) : {};
   renderWorkout();
 }
 
@@ -588,30 +388,28 @@ function renderWorkoutDay() {
 
   if (!workoutSets || Object.keys(workoutSets).length === 0) {
     const existing = workoutLog[logKey];
-    workoutSets = existing?.exercises
-      ? JSON.parse(JSON.stringify(existing.exercises))
-      : {};
+    workoutSets = existing?.exercises ? JSON.parse(JSON.stringify(existing.exercises)) : {};
   }
 
-  let html = "";
+  let html = '';
 
   // Previous workout info
   const prevKey = getPrevWorkoutKey(day, today);
   const prevData = prevKey ? workoutLog[prevKey] : null;
 
-  plan.sections.forEach((section) => {
+  plan.sections.forEach(section => {
     html += `<div class="section-divider">${section.name}</div>`;
-    section.exercises.forEach((ex) => {
+    section.exercises.forEach(ex => {
       const sets = workoutSets[ex.id] || [];
       const progress = getExerciseProgress(ex.id, today);
 
       html += `<div class="exercise-block">
         <div class="exercise-name">
           ${ex.name}
-          ${ex.bodyweight ? '<span class="bw-badge">BW</span>' : ""}
+          ${ex.bodyweight ? '<span class="bw-badge">BW</span>' : ''}
           <span class="exercise-target">${ex.target}</span>
-          ${ex.hint ? `<span style="font-size:11px;color:var(--text3)">${ex.hint}</span>` : ""}
-          ${progress ? `<span class="exercise-progress-badge ${progress.cls}">${progress.label}</span>` : ""}
+          ${ex.hint ? `<span style="font-size:11px;color:var(--text3)">${ex.hint}</span>` : ''}
+          ${progress ? `<span class="exercise-progress-badge ${progress.cls}">${progress.label}</span>` : ''}
         </div>`;
 
       // Sets table
@@ -619,22 +417,21 @@ function renderWorkoutDay() {
         html += `<table class="sets-table">
           <thead><tr>
             <th>Setas</th>
-            ${!ex.bodyweight ? "<th>kg</th>" : ""}
+            ${!ex.bodyweight ? '<th>kg</th>' : ''}
             <th>Reps</th>
             <th></th>
           </tr></thead>
           <tbody id="sets_${ex.id}">`;
 
         if (sets.length === 0) {
-          // Default sets from target
           const defaultSets = getDefaultSets(ex);
           defaultSets.forEach((s, i) => {
-            html += renderSetRow(ex, i, s.kg, s.reps);
+            html += renderSetRow(ex, i, s.kg, s.reps, s.done);
           });
           workoutSets[ex.id] = defaultSets;
         } else {
           sets.forEach((s, i) => {
-            html += renderSetRow(ex, i, s.kg, s.reps);
+            html += renderSetRow(ex, i, s.kg, s.reps, s.done);
           });
         }
 
@@ -649,8 +446,8 @@ function renderWorkoutDay() {
         if (sets.length === 0) workoutSets[ex.id] = timeSets;
         timeSets.forEach((s, i) => {
           html += `<tr>
-            <td style="color:var(--text2);font-size:13px">${i + 1}</td>
-            <td><input class="set-input" type="number" value="${s.secs || ""}" placeholder="45"
+            <td style="color:var(--text2);font-size:13px">${i+1}</td>
+            <td><input class="set-input" type="number" value="${s.secs || ''}" placeholder="45"
               oninput="updateSet('${ex.id}', ${i}, 'secs', this.value)"></td>
             <td><button class="remove-set-btn" onclick="removeSet('${ex.id}', ${i})">×</button></td>
           </tr>`;
@@ -663,23 +460,43 @@ function renderWorkoutDay() {
     });
   });
 
-  html += `<button class="save-btn" onclick="saveWorkout()">💾 Išsaugoti treniruotę</button>`;
+  html += `
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button class="icon-btn" onclick="startRestTimer(60)" style="flex:1">⏱ 60s</button>
+      <button class="icon-btn" onclick="startRestTimer(90)" style="flex:1">⏱ 90s</button>
+      <button class="icon-btn" onclick="startRestTimer(120)" style="flex:1">⏱ 2min</button>
+    </div>
+    <button class="save-btn" onclick="saveWorkout()" style="margin-top:10px">💾 Išsaugoti treniruotę</button>
+  `;
 
-  document.getElementById("workoutContent").innerHTML = html;
+  document.getElementById('workoutContent').innerHTML = html;
 }
 
-function renderSetRow(ex, i, kg, reps) {
-  return `<tr>
-    <td style="color:var(--text2);font-size:13px">${i + 1}</td>
-    ${
-      !ex.bodyweight
-        ? `<td><input class="set-input" type="number" value="${kg || ""}" placeholder="—"
-      oninput="updateSet('${ex.id}', ${i}, 'kg', this.value)"></td>`
-        : ""
-    }
-    <td><input class="set-input" type="number" value="${reps || ""}" placeholder="—"
-      oninput="updateSet('${ex.id}', ${i}, 'reps', this.value)"></td>
-    <td><button class="remove-set-btn" onclick="removeSet('${ex.id}', ${i})">×</button></td>
+function renderSetRow(ex, i, kg, reps, done) {
+  const kgVal = kg || 0;
+  const repsVal = reps || 0;
+  const rowStyle = done ? 'opacity:.5' : '';
+  return `<tr style="${rowStyle}">
+    <td style="color:var(--text2);font-size:13px;width:28px">${i+1}</td>
+    ${!ex.bodyweight ? `<td>
+      <div class="stepper">
+        <button class="step-btn" onclick="stepVal('${ex.id}',${i},'kg',-2.5)">−</button>
+        <span class="step-val" id="kg_${ex.id}_${i}">${kgVal||'—'}</span>
+        <button class="step-btn" onclick="stepVal('${ex.id}',${i},'kg',2.5)">+</button>
+      </div>
+    </td>` : ''}
+    <td>
+      <div class="stepper">
+        <button class="step-btn" onclick="stepVal('${ex.id}',${i},'reps',-1)">−</button>
+        <span class="step-val" id="reps_${ex.id}_${i}">${repsVal||'—'}</span>
+        <button class="step-btn" onclick="stepVal('${ex.id}',${i},'reps',1)">+</button>
+      </div>
+    </td>
+    <td style="width:36px;text-align:center">
+      <button class="done-btn ${done ? 'done-active' : ''}" onclick="toggleSetDone('${ex.id}',${i})">
+        ${done ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+      </button>
+    </td>
   </tr>`;
 }
 
@@ -688,8 +505,7 @@ function getDefaultSets(ex) {
   const match = ex.target.match(/^(\d+)/);
   const count = match ? parseInt(match[1]) : 3;
   const sets = [];
-  for (let i = 0; i < count; i++)
-    sets.push({ kg: null, reps: null, secs: null });
+  for (let i = 0; i < count; i++) sets.push({ kg: null, reps: null, secs: null });
   return sets;
 }
 
@@ -697,6 +513,25 @@ function updateSet(exId, idx, field, val) {
   if (!workoutSets[exId]) workoutSets[exId] = [];
   if (!workoutSets[exId][idx]) workoutSets[exId][idx] = {};
   workoutSets[exId][idx][field] = val ? parseFloat(val) : null;
+}
+
+function stepVal(exId, idx, field, delta) {
+  if (!workoutSets[exId]) workoutSets[exId] = [];
+  if (!workoutSets[exId][idx]) workoutSets[exId][idx] = { kg: null, reps: null, done: false };
+  const cur = workoutSets[exId][idx][field] || 0;
+  const next = Math.max(0, +(cur + delta).toFixed(1));
+  workoutSets[exId][idx][field] = next;
+  const el = document.getElementById(`${field}_${exId}_${idx}`);
+  if (el) el.textContent = next || '—';
+}
+
+function toggleSetDone(exId, idx) {
+  if (!workoutSets[exId] || !workoutSets[exId][idx]) return;
+  workoutSets[exId][idx].done = !workoutSets[exId][idx].done;
+  // Check if all sets done → start rest timer
+  const allDone = workoutSets[exId].every(s => s.done);
+  renderWorkoutDay();
+  if (allDone) startRestTimer();
 }
 
 function addSet(exId, bodyweight, time) {
@@ -716,28 +551,23 @@ function removeSet(exId, idx) {
 function saveWorkout() {
   const today = todayStr();
   const logKey = `${today}_${activeWorkoutDay}`;
-  workoutLog[logKey] = {
-    date: today,
-    day: activeWorkoutDay,
-    exercises: JSON.parse(JSON.stringify(workoutSets)),
-  };
-  save("workoutLog", workoutLog);
+  workoutLog[logKey] = { date: today, day: activeWorkoutDay, exercises: JSON.parse(JSON.stringify(workoutSets)) };
+  save('workoutLog', workoutLog);
 
   // Mark workout done in daily log
   if (!dailyLog[today]) dailyLog[today] = { checklist: {}, cardio: [] };
   if (!dailyLog[today].checklist) dailyLog[today].checklist = {};
   dailyLog[today].checklist.workout = true;
-  save("dailyLog", dailyLog);
+  save('dailyLog', dailyLog);
 
-  showToast("✅ Treniruotė išsaugota!");
+  showToast('✅ Treniruotė išsaugota!');
   renderWorkout();
 }
 
 function getPrevWorkoutKey(day, beforeDate) {
   const keys = Object.keys(workoutLog)
-    .filter((k) => k.endsWith("_" + day) && k.split("_")[0] < beforeDate)
-    .sort()
-    .reverse();
+    .filter(k => k.endsWith('_' + day) && k.split('_')[0] < beforeDate)
+    .sort().reverse();
   return keys[0] || null;
 }
 
@@ -754,48 +584,37 @@ function getExerciseProgress(exId, today) {
   const todaySets = todayEntry.exercises?.[exId];
   if (!todaySets) return null;
 
-  const prevMaxKg = Math.max(...prevSets.map((s) => s.kg || 0));
-  const todayMaxKg = Math.max(...todaySets.map((s) => s.kg || 0));
+  const prevMaxKg = Math.max(...prevSets.map(s => s.kg || 0));
+  const todayMaxKg = Math.max(...todaySets.map(s => s.kg || 0));
   const prevTotalReps = prevSets.reduce((a, s) => a + (s.reps || 0), 0);
   const todayTotalReps = todaySets.reduce((a, s) => a + (s.reps || 0), 0);
 
-  if (todayMaxKg > prevMaxKg)
-    return {
-      label: `+${+(todayMaxKg - prevMaxKg).toFixed(1)} kg ↑`,
-      cls: "badge-up",
-    };
-  if (todayTotalReps > prevTotalReps)
-    return {
-      label: `+${todayTotalReps - prevTotalReps} reps ↑`,
-      cls: "badge-up",
-    };
-  if (todaySets.length > prevSets.length)
-    return { label: "+1 setas ↑", cls: "badge-up" };
-  return { label: "= lygis", cls: "badge-same" };
+  if (todayMaxKg > prevMaxKg) return { label: `+${+(todayMaxKg-prevMaxKg).toFixed(1)} kg ↑`, cls: 'badge-up' };
+  if (todayTotalReps > prevTotalReps) return { label: `+${todayTotalReps-prevTotalReps} reps ↑`, cls: 'badge-up' };
+  if (todaySets.length > prevSets.length) return { label: '+1 setas ↑', cls: 'badge-up' };
+  return { label: '= lygis', cls: 'badge-same' };
 }
 
 // ==================== WEIGHT ====================
 function renderWeight() {
   const today = todayStr();
-  document.getElementById("weightDate").value = today;
+  document.getElementById('weightDate').value = today;
 
   const logs = [...weightLog].sort((a, b) => b.date.localeCompare(a.date));
   const config2 = config;
 
   // Log list
-  let html = "";
+  let html = '';
   if (logs.length === 0) {
     html = `<div class="empty-state"><div>⚖️</div><div>Dar nėra įrašų</div></div>`;
   } else {
     logs.forEach((entry, i) => {
       const prev = logs[i + 1];
       const delta = prev ? +(entry.kg - prev.kg).toFixed(1) : null;
-      let deltaHtml = "";
+      let deltaHtml = '';
       if (delta !== null) {
-        if (delta < 0)
-          deltaHtml = `<span class="weight-delta delta-down">−${Math.abs(delta)} kg</span>`;
-        else if (delta > 0)
-          deltaHtml = `<span class="weight-delta delta-up">+${delta} kg</span>`;
+        if (delta < 0) deltaHtml = `<span class="weight-delta delta-down">−${Math.abs(delta)} kg</span>`;
+        else if (delta > 0) deltaHtml = `<span class="weight-delta delta-up">+${delta} kg</span>`;
         else deltaHtml = `<span class="weight-delta delta-same">= </span>`;
       }
       html += `<div class="weight-row">
@@ -810,58 +629,56 @@ function renderWeight() {
       </div>`;
     });
   }
-  document.getElementById("weightLog").innerHTML = html;
+  document.getElementById('weightLog').innerHTML = html;
 
   // Chart
   const sorted = [...weightLog].sort((a, b) => a.date.localeCompare(b.date));
   if (sorted.length >= 2) {
-    document.getElementById("weightChartCard").style.display = "block";
+    document.getElementById('weightChartCard').style.display = 'block';
     drawWeightChart(sorted);
   } else {
-    document.getElementById("weightChartCard").style.display = "none";
+    document.getElementById('weightChartCard').style.display = 'none';
   }
 }
 
 function addWeight() {
-  const date = document.getElementById("weightDate").value;
-  const kg = parseFloat(document.getElementById("weightVal").value);
+  const date = document.getElementById('weightDate').value;
+  const kg = parseFloat(document.getElementById('weightVal').value);
   if (!date || !kg) return;
-  weightLog = weightLog.filter((e) => e.date !== date);
+  weightLog = weightLog.filter(e => e.date !== date);
   weightLog.push({ date, kg });
   weightLog.sort((a, b) => a.date.localeCompare(b.date));
-  save("weightLog", weightLog);
-  document.getElementById("weightVal").value = "";
-  showToast("⚖️ Svoris išsaugotas!");
+  save('weightLog', weightLog);
+  document.getElementById('weightVal').value = '';
+  showToast('⚖️ Svoris išsaugotas!');
   renderWeight();
   renderDashboard();
 }
 
 function removeWeight(date) {
-  if (!confirm("Ištrinti šį įrašą?")) return;
-  weightLog = weightLog.filter((e) => e.date !== date);
-  save("weightLog", weightLog);
+  if (!confirm('Ištrinti šį įrašą?')) return;
+  weightLog = weightLog.filter(e => e.date !== date);
+  save('weightLog', weightLog);
   renderWeight();
   renderDashboard();
 }
 
 function drawWeightChart(data) {
-  const svg = document.getElementById("weightChart");
-  const W = 340,
-    H = 100,
-    PAD = 20;
-  const vals = data.map((d) => d.kg);
+  const svg = document.getElementById('weightChart');
+  const W = 340, H = 100, PAD = 20;
+  const vals = data.map(d => d.kg);
   const min = Math.min(...vals) - 1;
   const max = Math.max(...vals) + 1;
   const n = data.length;
 
-  const x = (i) => PAD + (i / (n - 1)) * (W - PAD * 2);
-  const y = (v) => PAD + (1 - (v - min) / (max - min)) * (H - PAD * 2);
+  const x = i => PAD + (i / (n - 1)) * (W - PAD * 2);
+  const y = v => PAD + (1 - (v - min) / (max - min)) * (H - PAD * 2);
 
-  let points = data.map((d, i) => `${x(i)},${y(d.kg)}`).join(" ");
+  let points = data.map((d, i) => `${x(i)},${y(d.kg)}`).join(' ');
 
   // Goal line
   const goalKg = config?.goalWeight;
-  let goalLine = "";
+  let goalLine = '';
   if (goalKg) {
     const gy = y(goalKg);
     if (gy >= 0 && gy <= H) {
@@ -872,8 +689,8 @@ function drawWeightChart(data) {
   svg.innerHTML = `
     ${goalLine}
     <polyline points="${points}" fill="none" stroke="#ff6b35" stroke-width="2.5" stroke-linejoin="round"/>
-    ${data.map((d, i) => `<circle cx="${x(i)}" cy="${y(d.kg)}" r="3" fill="#ff6b35"/>`).join("")}
-    ${data.map((d, i) => (i === 0 || i === n - 1 ? `<text x="${x(i)}" y="${y(d.kg) - 7}" text-anchor="middle" fill="#888" font-size="9">${d.kg}</text>` : "")).join("")}
+    ${data.map((d, i) => `<circle cx="${x(i)}" cy="${y(d.kg)}" r="3" fill="#ff6b35"/>`).join('')}
+    ${data.map((d, i) => i === 0 || i === n - 1 ? `<text x="${x(i)}" y="${y(d.kg) - 7}" text-anchor="middle" fill="#888" font-size="9">${d.kg}</text>` : '').join('')}
   `;
 }
 
@@ -881,10 +698,10 @@ function drawWeightChart(data) {
 function renderProgress() {
   // Collect all exercises across all days
   const allExercises = [];
-  DAYS.forEach((day) => {
-    TRAINING_PLAN[day].sections.forEach((s) => {
-      s.exercises.forEach((ex) => {
-        if (!allExercises.find((e) => e.id === ex.id)) {
+  DAYS.forEach(day => {
+    TRAINING_PLAN[day].sections.forEach(s => {
+      s.exercises.forEach(ex => {
+        if (!allExercises.find(e => e.id === ex.id)) {
           allExercises.push({ ...ex, day });
         }
       });
@@ -892,23 +709,21 @@ function renderProgress() {
   });
 
   // Gather logs per exercise
-  let html = "";
+  let html = '';
   let hasAny = false;
 
-  allExercises.forEach((ex) => {
+  allExercises.forEach(ex => {
     const logs = [];
-    Object.keys(workoutLog)
-      .sort()
-      .forEach((key) => {
-        const entry = workoutLog[key];
-        const sets = entry.exercises?.[ex.id];
-        if (sets && sets.length > 0) {
-          const validSets = sets.filter((s) => s.reps || s.secs);
-          if (validSets.length > 0) {
-            logs.push({ date: entry.date, sets: validSets });
-          }
+    Object.keys(workoutLog).sort().forEach(key => {
+      const entry = workoutLog[key];
+      const sets = entry.exercises?.[ex.id];
+      if (sets && sets.length > 0) {
+        const validSets = sets.filter(s => s.reps || s.secs);
+        if (validSets.length > 0) {
+          logs.push({ date: entry.date, sets: validSets });
         }
-      });
+      }
+    });
 
     if (logs.length === 0) return;
     hasAny = true;
@@ -916,55 +731,52 @@ function renderProgress() {
     // Calculate progress
     const first = logs[0];
     const last = logs[logs.length - 1];
-    const firstMaxKg = Math.max(...first.sets.map((s) => s.kg || 0));
-    const lastMaxKg = Math.max(...last.sets.map((s) => s.kg || 0));
+    const firstMaxKg = Math.max(...first.sets.map(s => s.kg || 0));
+    const lastMaxKg = Math.max(...last.sets.map(s => s.kg || 0));
     const firstTotalReps = first.sets.reduce((a, s) => a + (s.reps || 0), 0);
     const lastTotalReps = last.sets.reduce((a, s) => a + (s.reps || 0), 0);
 
-    let gainLabel = "",
-      gainCls = "";
+    let gainLabel = '', gainCls = '';
     if (lastMaxKg > firstMaxKg) {
       gainLabel = `+${+(lastMaxKg - firstMaxKg).toFixed(1)} kg`;
-      gainCls = "badge-up";
+      gainCls = 'badge-up';
     } else if (lastTotalReps > firstTotalReps) {
       gainLabel = `+${lastTotalReps - firstTotalReps} reps`;
-      gainCls = "badge-up";
+      gainCls = 'badge-up';
     } else if (logs.length > 1) {
-      gainLabel = "= lygis";
-      gainCls = "badge-same";
+      gainLabel = '= lygis';
+      gainCls = 'badge-same';
     }
 
     html += `<div class="card exercise-progress-card">
       <div class="ep-header">
         <div class="ep-name">${ex.name}</div>
-        ${gainLabel ? `<span class="ep-gain ${gainCls}">${gainLabel}</span>` : ""}
+        ${gainLabel ? `<span class="ep-gain ${gainCls}">${gainLabel}</span>` : ''}
       </div>`;
 
     logs.forEach((log, i) => {
       const prevLog = logs[i - 1];
-      let trend = "";
+      let trend = '';
       if (prevLog) {
-        const prevMax = Math.max(...prevLog.sets.map((s) => s.kg || 0));
-        const curMax = Math.max(...log.sets.map((s) => s.kg || 0));
+        const prevMax = Math.max(...prevLog.sets.map(s => s.kg || 0));
+        const curMax = Math.max(...log.sets.map(s => s.kg || 0));
         const prevReps = prevLog.sets.reduce((a, s) => a + (s.reps || 0), 0);
         const curReps = log.sets.reduce((a, s) => a + (s.reps || 0), 0);
-        if (curMax > prevMax || curReps > prevReps) trend = "↑";
-        else if (curMax < prevMax || curReps < prevReps) trend = "↓";
-        else trend = "→";
+        if (curMax > prevMax || curReps > prevReps) trend = '↑';
+        else if (curMax < prevMax || curReps < prevReps) trend = '↓';
+        else trend = '→';
       }
 
-      const setsStr = log.sets
-        .map((s) => {
-          if (s.secs) return `${s.secs}s`;
-          if (ex.bodyweight) return `${s.reps || "?"}`;
-          return `${s.kg || "?"}kg×${s.reps || "?"}`;
-        })
-        .join(" / ");
+      const setsStr = log.sets.map(s => {
+        if (s.secs) return `${s.secs}s`;
+        if (ex.bodyweight) return `${s.reps || '?'}`;
+        return `${s.kg || '?'}kg×${s.reps || '?'}`;
+      }).join(' / ');
 
       html += `<div class="ep-log-row">
         <span class="ep-date">${formatDateShort(log.date)}</span>
         <span class="ep-sets">${setsStr}</span>
-        <span class="ep-trend" style="color:${trend === "↑" ? "var(--green)" : trend === "↓" ? "var(--red)" : "var(--text3)"}">${trend}</span>
+        <span class="ep-trend" style="color:${trend === '↑' ? 'var(--green)' : trend === '↓' ? 'var(--red)' : 'var(--text3)'}">${trend}</span>
       </div>`;
     });
 
@@ -975,40 +787,31 @@ function renderProgress() {
     html = `<div class="empty-state"><div>📈</div><div>Dar nėra treniruočių įrašų</div></div>`;
   }
 
-  document.getElementById("progressContent").innerHTML = html;
+  document.getElementById('progressContent').innerHTML = html;
 }
 
 // ==================== SETTINGS ====================
 function renderSettings() {
   if (!config) {
-    document.getElementById("settingsInfo").innerHTML =
-      `<div style="color:var(--text2);font-size:13px">Nustatymai nėra sukurti.</div>`;
+    document.getElementById('settingsInfo').innerHTML = `<div style="color:var(--text2);font-size:13px">Nustatymai nėra sukurti.</div>`;
     return;
   }
-  const start = new Date(config.startDate + "T00:00:00");
+  const start = new Date(config.startDate + 'T00:00:00');
   const end = new Date(start);
   end.setDate(end.getDate() + config.weeks * 7);
-  document.getElementById("settingsInfo").innerHTML = `
+  document.getElementById('settingsInfo').innerHTML = `
     <div class="settings-row"><span class="settings-label">Starto svoris</span><span class="settings-val">${config.startWeight} kg</span></div>
     <div class="settings-row"><span class="settings-label">Tikslinis svoris</span><span class="settings-val">${config.goalWeight} kg</span></div>
-    <div class="settings-row"><span class="settings-label">Trukm&eogon;</span><span class="settings-val">${config.weeks} sav.</span></div>
+    <div class="settings-row"><span class="settings-label">Trukm&eogon;</span><span class="settings-val">${config.weeks} savaičių</span></div>
     <div class="settings-row"><span class="settings-label">Pradžia</span><span class="settings-val">${config.startDate}</span></div>
-    <div class="settings-row"><span class="settings-label">Pabaiga</span><span class="settings-val">${end.toISOString().split("T")[0]}</span></div>
+    <div class="settings-row"><span class="settings-label">Pabaiga</span><span class="settings-val">${end.toISOString().split('T')[0]}</span></div>
   `;
 }
 
 function exportData() {
-  const data = {
-    config,
-    dailyLog,
-    workoutLog,
-    weightLog,
-    exportDate: new Date().toISOString(),
-  };
-  const blob = new Blob([JSON.stringify(data, null, 2)], {
-    type: "application/json",
-  });
-  const a = document.createElement("a");
+  const data = { config, dailyLog, workoutLog, weightLog, exportDate: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = `cut-tracker-backup-${todayStr()}.json`;
   a.click();
@@ -1018,61 +821,117 @@ function importData(event) {
   const file = event.target.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = (e) => {
+  reader.onload = e => {
     try {
       const data = JSON.parse(e.target.result);
-      if (data.config) {
-        config = data.config;
-        save("config", config);
-      }
-      if (data.dailyLog) {
-        dailyLog = data.dailyLog;
-        save("dailyLog", dailyLog);
-      }
-      if (data.workoutLog) {
-        workoutLog = data.workoutLog;
-        save("workoutLog", workoutLog);
-      }
-      if (data.weightLog) {
-        weightLog = data.weightLog;
-        save("weightLog", weightLog);
-      }
-      showToast("✅ Duomenys atstatyti!");
+      if (data.config) { config = data.config; save('config', config); }
+      if (data.dailyLog) { dailyLog = data.dailyLog; save('dailyLog', dailyLog); }
+      if (data.workoutLog) { workoutLog = data.workoutLog; save('workoutLog', workoutLog); }
+      if (data.weightLog) { weightLog = data.weightLog; save('weightLog', weightLog); }
+      showToast('✅ Duomenys atstatyti!');
       renderAll();
-    } catch {
-      alert("Nepavyko nuskaityti failo.");
-    }
+    } catch { alert('Nepavyko nuskaityti failo.'); }
   };
   reader.readAsText(file);
 }
 
 function resetData() {
-  if (
-    !confirm(
-      "Ar tikrai nori ištrinti VISUS duomenis? Šio veiksmo negalima atšaukti.",
-    )
-  )
-    return;
+  // confirm() blocked in some contexts - use custom modal
+  const el = document.getElementById('resetConfirm');
+  if (el) el.style.display = 'flex';
+}
+async function resetDataConfirmed() {
+  // Delete from Supabase
+  for (const id of ['config','dailyLog','workoutLog','weightLog']) {
+    try {
+      await fetch(`${SB_URL}/rest/v1/app_data?id=eq.${id}`, {
+        method: 'DELETE',
+        headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
+      });
+    } catch(e) {}
+  }
+  // Clear LocalStorage
   localStorage.clear();
   location.reload();
+}
+function resetDataCancel() {
+  const el = document.getElementById('resetConfirm');
+  if (el) el.style.display = 'none';
+}
+
+// ==================== REST TIMER ====================
+let restInterval = null;
+let restSeconds = 0;
+
+function startRestTimer(secs) {
+  // Show rest timer modal
+  secs = secs || 90;
+  restSeconds = secs;
+  const el = document.getElementById('restTimerModal');
+  if (el) { el.style.display = 'flex'; updateRestDisplay(); }
+  clearInterval(restInterval);
+  restInterval = setInterval(() => {
+    restSeconds--;
+    updateRestDisplay();
+    if (restSeconds <= 0) {
+      clearInterval(restInterval);
+      // Vibrate if supported
+      if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+      document.getElementById('restTimerLabel').textContent = '✅ Laikas!';
+    }
+  }, 1000);
+}
+
+function updateRestDisplay() {
+  const m = Math.floor(Math.abs(restSeconds) / 60);
+  const s = Math.abs(restSeconds) % 60;
+  const sign = restSeconds < 0 ? '+' : '';
+  document.getElementById('restTimerDisplay').textContent = `${sign}${m}:${s.toString().padStart(2,'0')}`;
+  const pct = Math.max(0, restSeconds / (document.getElementById('restTimerModal').dataset.total || 90));
+  const circ = document.getElementById('restCircle');
+  if (circ) {
+    const len = 2 * Math.PI * 54;
+    circ.style.strokeDashoffset = len * (1 - pct);
+  }
+}
+
+function stopRestTimer() {
+  clearInterval(restInterval);
+  const el = document.getElementById('restTimerModal');
+  if (el) el.style.display = 'none';
+}
+
+function setRestTime(secs) {
+  clearInterval(restInterval);
+  restSeconds = secs;
+  document.getElementById('restTimerModal').dataset.total = secs;
+  updateRestDisplay();
+  restInterval = setInterval(() => {
+    restSeconds--;
+    updateRestDisplay();
+    if (restSeconds <= 0) {
+      clearInterval(restInterval);
+      if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+      document.getElementById('restTimerLabel').textContent = '✅ Laikas!';
+    }
+  }, 1000);
 }
 
 // ==================== SYNC UI ====================
 function showSyncIndicator(msg) {
-  let el = document.getElementById("syncIndicator");
+  let el = document.getElementById('syncIndicator');
   if (!el) {
-    el = document.createElement("div");
-    el.id = "syncIndicator";
-    el.style.cssText =
-      "position:fixed;top:12px;right:12px;background:#1a1a1a;border:1px solid #333;border-radius:99px;padding:6px 14px;font-size:12px;font-weight:700;color:#888;z-index:9000;";
+    el = document.createElement('div');
+    el.id = 'syncIndicator';
+    el.style.cssText = 'position:fixed;top:12px;right:12px;background:#1a1a1a;border:1px solid #333;border-radius:99px;padding:6px 14px;font-size:12px;font-weight:700;color:#888;z-index:9000;';
     document.body.appendChild(el);
   }
   el.textContent = msg;
-  el.style.display = "block";
+  el.style.display = 'block';
 }
 function hideSyncIndicator() {
-  const el = document.getElementById("syncIndicator");
-  if (el) el.style.display = "none";
+  const el = document.getElementById('syncIndicator');
+  if (el) el.style.display = 'none';
 }
 
 // ==================== INIT ====================
@@ -1082,13 +941,13 @@ function renderAll() {
 
 // Try loading from cloud first
 (async () => {
-  showSyncIndicator("☁️ Kraunama...");
+  showSyncIndicator('☁️ Kraunama...');
   const loaded = await loadFromCloud();
   hideSyncIndicator();
   if (!config) {
-    document.getElementById("setupModal").style.display = "flex";
+    document.getElementById('setupModal').style.display = 'flex';
   } else {
-    document.getElementById("setupModal").style.display = "none";
+    document.getElementById('setupModal').style.display = 'none';
     renderAll();
   }
 })();

@@ -204,7 +204,7 @@ function showPage(name) {
   if (idx >= 0) btns[idx].classList.add('active');
   if (name === 'Workout') renderWorkout();
   if (name === 'Weight') renderWeight();
-  if (name === 'Progress') renderProgress();
+  if (name === 'Progress') { renderProgress(); renderCalendar(); }
   if (name === 'Settings') renderSettings();
 }
 
@@ -302,7 +302,7 @@ function renderDashboard() {
   const checks = [
     { id: 'diet', label: 'Dietos laikiausi', icon: '✅' },
     { id: 'workout', label: 'Sportas', icon: '🏋️' },
-    { id: 'cardio', label: 'Cardio / Vaikščiojimas', icon: '🏃' },
+    { id: 'cardio', label: 'Cardio', icon: '🏃' },
   ];
 
   const checksDone = checks.every(c => dl.checklist?.[c.id]);
@@ -696,6 +696,66 @@ function drawWeightChart(data) {
   `;
 }
 
+// ==================== CALENDAR ====================
+let calYear = new Date().getFullYear();
+let calMonth = new Date().getMonth();
+
+function calPrev() {
+  calMonth--;
+  if (calMonth < 0) { calMonth = 11; calYear--; }
+  renderCalendar();
+}
+function calNext() {
+  calMonth++;
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  renderCalendar();
+}
+
+function renderCalendar() {
+  const months = ['Sausis','Vasaris','Kovas','Balandis','Gegužė','Birželis','Liepa','Rugpjūtis','Rugsėjis','Spalis','Lapkritis','Gruodis'];
+  document.getElementById('calTitle').textContent = months[calMonth] + ' ' + calYear;
+
+  const firstDay = new Date(calYear, calMonth, 1);
+  // Monday-based: Mon=0 ... Sun=6
+  let startDow = firstDay.getDay() - 1;
+  if (startDow < 0) startDow = 6;
+
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  const grid = document.getElementById('calGrid');
+  if (!grid) return;
+
+  let html = '';
+  // Empty cells
+  for (let i = 0; i < startDow; i++) {
+    html += '<div></div>';
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const log = dailyLog[dateStr];
+    const diet = log?.checklist?.diet;
+    const sport = log?.checklist?.workout;
+    const cardio = log?.checklist?.cardio;
+
+    const isToday = dateStr === todayStr();
+    const todayStyle = isToday ? 'border:1.5px solid var(--accent);' : '';
+
+    const dots = `
+      <div style="display:flex;gap:2px;justify-content:center;margin-top:3px">
+        <div style="width:5px;height:5px;border-radius:50%;background:${diet ? 'var(--green)' : 'var(--border)'}"></div>
+        <div style="width:5px;height:5px;border-radius:50%;background:${sport ? 'var(--accent)' : 'var(--border)'}"></div>
+        <div style="width:5px;height:5px;border-radius:50%;background:${cardio ? '#60a5fa' : 'var(--border)'}"></div>
+      </div>`;
+
+    html += `<div style="border-radius:8px;padding:5px 2px;text-align:center;background:var(--surface2);${todayStyle}">
+      <div style="font-size:11px;font-weight:${isToday ? '800' : '500'};color:${isToday ? 'var(--accent)' : 'var(--text2)'}">${d}</div>
+      ${dots}
+    </div>`;
+  }
+
+  grid.innerHTML = html;
+}
+
 // ==================== PROGRESS ====================
 function renderProgress() {
   // Collect all exercises across all days
@@ -919,6 +979,85 @@ function setRestTime(secs) {
   }, 1000);
 }
 
+// ==================== CHALLENGE END ====================
+function checkChallengeEnd() {
+  if (!config?.startDate || !config?.weeks) return;
+  const totalDays = config.weeks * 7;
+  const start = new Date(config.startDate + 'T00:00:00');
+  const today = new Date(todayStr() + 'T00:00:00');
+  const elapsed = Math.floor((today - start) / 86400000);
+  if (elapsed < totalDays) return;
+
+  // Already shown today?
+  const shownKey = 'challengeEndShown_' + config.startDate;
+  if (localStorage.getItem(shownKey)) return;
+  localStorage.setItem(shownKey, '1');
+
+  showChallengeEndModal();
+}
+
+function showChallengeEndModal() {
+  const modal = document.getElementById('challengeEndModal');
+  modal.style.display = 'flex';
+
+  const latestW = weightLog.length ? weightLog[weightLog.length-1].kg : config.startWeight;
+  const lost = +(config.startWeight - latestW).toFixed(1);
+  const goalReached = latestW <= config.goalWeight;
+
+  document.getElementById('challengeEndIcon').textContent = goalReached ? '🏆' : '💪';
+  document.getElementById('challengeEndTitle').textContent = goalReached ? 'Tikslas pasiektas!' : 'Challenge baigtas!';
+  document.getElementById('challengeEndSub').textContent = goalReached
+    ? `Puiku! Numestai ${lost} kg per ${config.weeks} savaites.`
+    : `Numestai ${lost} kg iš ${+(config.startWeight - config.goalWeight).toFixed(1)} kg tikslo. Dar liko ${+(latestW - config.goalWeight).toFixed(1)} kg.`;
+
+  document.getElementById('challengeEndStats').innerHTML = `
+    <div><div style="font-size:22px;font-weight:800;font-family:var(--font-mono);color:var(--accent)">${config.startWeight}</div><div style="font-size:11px;color:var(--text2);margin-top:2px">Pradžia</div></div>
+    <div><div style="font-size:22px;font-weight:800;font-family:var(--font-mono);color:var(--green)">${latestW}</div><div style="font-size:11px;color:var(--text2);margin-top:2px">Dabar</div></div>
+    <div><div style="font-size:22px;font-weight:800;font-family:var(--font-mono);color:${lost > 0 ? 'var(--green)' : 'var(--text2)'}">−${lost}</div><div style="font-size:11px;color:var(--text2);margin-top:2px">Numesta</div></div>
+  `;
+
+  // Hide "continue until goal" if already reached
+  if (goalReached) document.getElementById('btnUntilGoal').style.display = 'none';
+}
+
+function showExtendForm() {
+  document.getElementById('extendForm').style.display = 'block';
+}
+
+function challengeRestart() {
+  // Reset everything except weight log
+  config = { ...config, startDate: todayStr(), startWeight: weightLog.length ? weightLog[weightLog.length-1].kg : config.startWeight };
+  dailyLog = {};
+  workoutLog = {};
+  save('config', config);
+  save('dailyLog', dailyLog);
+  save('workoutLog', workoutLog);
+  syncToCloud();
+  document.getElementById('challengeEndModal').style.display = 'none';
+  renderAll();
+}
+
+function challengeContinueUntilGoal() {
+  // Extend by 4 weeks at a time
+  config.weeks += 4;
+  save('config', config);
+  syncToCloud();
+  document.getElementById('challengeEndModal').style.display = 'none';
+  renderAll();
+}
+
+function challengeExtend() {
+  const newGoal = parseFloat(document.getElementById('extendGoalWeight').value);
+  const addWeeks = parseInt(document.getElementById('extendWeeks').value);
+  if (!newGoal || !addWeeks) return;
+  config.goalWeight = newGoal;
+  config.weeks += addWeeks;
+  save('config', config);
+  syncToCloud();
+  document.getElementById('challengeEndModal').style.display = 'none';
+  renderAll();
+}
+
 // ==================== SYNC UI ====================
 function showSyncIndicator(msg) {
   let el = document.getElementById('syncIndicator');
@@ -939,6 +1078,7 @@ function hideSyncIndicator() {
 // ==================== INIT ====================
 function renderAll() {
   renderDashboard();
+  checkChallengeEnd();
 }
 
 // Try loading from cloud first

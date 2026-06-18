@@ -120,6 +120,30 @@
     <div class="page-title">Progresas</div>
     <div class="page-subtitle">Kiekvienam pratimui</div>
   </div>
+
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <button onclick="calPrev()" style="background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer;padding:0 8px">‹</button>
+      <div id="calTitle" style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text2)"></div>
+      <button onclick="calNext()" style="background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer;padding:0 8px">›</button>
+    </div>
+    <div style="display:flex;gap:16px;margin-bottom:12px;font-size:11px;color:var(--text2);font-weight:600">
+      <span style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block"></span>Dieta</span>
+      <span style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block"></span>Sportas</span>
+      <span style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:50%;background:#60a5fa;display:inline-block"></span>Cardio</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:6px">
+      <div style="text-align:center;font-size:10px;font-weight:700;color:var(--text3)">P</div>
+      <div style="text-align:center;font-size:10px;font-weight:700;color:var(--text3)">A</div>
+      <div style="text-align:center;font-size:10px;font-weight:700;color:var(--text3)">T</div>
+      <div style="text-align:center;font-size:10px;font-weight:700;color:var(--text3)">K</div>
+      <div style="text-align:center;font-size:10px;font-weight:700;color:var(--text3)">Pn</div>
+      <div style="text-align:center;font-size:10px;font-weight:700;color:var(--text3)">Š</div>
+      <div style="text-align:center;font-size:10px;font-weight:700;color:var(--text3)">S</div>
+    </div>
+    <div id="calGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px"></div>
+  </div>
+
   <div id="progressContent"></div>
 </div>
 

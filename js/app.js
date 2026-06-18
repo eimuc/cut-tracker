@@ -473,25 +473,13 @@ function renderWorkoutDay() {
 }
 
 function renderSetRow(ex, i, kg, reps, done) {
-  const kgVal = kg || 0;
-  const repsVal = reps || 0;
   const rowStyle = done ? 'opacity:.5' : '';
   return `<tr style="${rowStyle}">
-    <td style="color:var(--text2);font-size:13px;width:28px">${i+1}</td>
-    ${!ex.bodyweight ? `<td>
-      <div class="stepper">
-        <button class="step-btn" onclick="stepVal('${ex.id}',${i},'kg',-2.5)">−</button>
-        <span class="step-val" id="kg_${ex.id}_${i}">${kgVal||'—'}</span>
-        <button class="step-btn" onclick="stepVal('${ex.id}',${i},'kg',2.5)">+</button>
-      </div>
-    </td>` : ''}
-    <td>
-      <div class="stepper">
-        <button class="step-btn" onclick="stepVal('${ex.id}',${i},'reps',-1)">−</button>
-        <span class="step-val" id="reps_${ex.id}_${i}">${repsVal||'—'}</span>
-        <button class="step-btn" onclick="stepVal('${ex.id}',${i},'reps',1)">+</button>
-      </div>
-    </td>
+    <td style="color:var(--text2);font-size:13px;width:24px">${i+1}</td>
+    ${!ex.bodyweight ? `<td><input class="set-input" type="number" inputmode="decimal" value="${kg || ''}" placeholder="kg"
+      oninput="updateSet('${ex.id}', ${i}, 'kg', this.value)"></td>` : ''}
+    <td><input class="set-input" type="number" inputmode="numeric" value="${reps || ''}" placeholder="reps"
+      oninput="updateSet('${ex.id}', ${i}, 'reps', this.value)"></td>
     <td style="width:36px;text-align:center">
       <button class="done-btn ${done ? 'done-active' : ''}" onclick="toggleSetDone('${ex.id}',${i})">
         ${done ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : ''}

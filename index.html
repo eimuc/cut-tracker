@@ -91,16 +91,16 @@
 
   <div class="card">
     <div class="card-title">Pridėti įrašą</div>
+    <div class="input-group" style="margin-bottom:10px">
+      <div class="input-label">Data</div>
+      <input type="date" class="text-input" id="weightDate">
+    </div>
     <div class="weight-input-row">
       <div class="input-group">
-        <div class="input-label">Data</div>
-        <input type="date" class="text-input" id="weightDate">
-      </div>
-      <div class="input-group" style="max-width:110px">
         <div class="input-label">Svoris (kg)</div>
         <input type="number" class="text-input" id="weightVal" placeholder="80.5" step="0.1">
       </div>
-      <button class="add-btn" onclick="addWeight()">+</button>
+      <button class="add-btn" onclick="addWeight()">Pridėti</button>
     </div>
   </div>
 
@@ -139,7 +139,7 @@
     <button class="danger-btn" onclick="resetData()">🗑 Ištrinti visus duomenis</button>
   </div>
   <div class="card" style="font-size:12px;color:var(--text3);text-align:center;line-height:1.7">
-    CUT Tracker v1.0
+    CUT Tracker v1.0<br>Duomenys saugomi tik šiame įrenginyje.<br>Reguliariai daryk backup!
   </div>
 </div>
 
@@ -458,26 +458,22 @@ function renderDashboard() {
       document.getElementById('expectedVal').textContent = expected + ' kg';
       document.getElementById('expectedWeightBox').style.display = 'flex';
       const status = document.getElementById('expectedStatus');
-      if (latestW < expected) {
-        status.textContent = '✅';
-        status.title = 'Lenki planą!';
-      } else if (latestW > expected + 0.5) {
-        status.textContent = '⚠️';
+      const diff = +(latestW - expected).toFixed(1);
+      if (diff < 0) {
+        status.innerHTML = `<span style="color:var(--green);font-size:13px;font-weight:800">${diff} kg<br><span style="font-size:10px">lenki planą</span></span>`;
+      } else if (diff > 0.3) {
+        status.innerHTML = `<span style="color:var(--red);font-size:13px;font-weight:800">+${diff} kg<br><span style="font-size:10px">atsilieki</span></span>`;
       } else {
-        status.textContent = '👍';
+        status.innerHTML = `<span style="color:var(--text2);font-size:13px;font-weight:800">= planą</span>`;
       }
     }
   }
 
   // Daily checklist
-  const todayDay = todayTrainingDay();
   const dl = dailyLog[today] || {};
   const checks = [
-    { id: 'breakfast', label: 'Pusryčiai', icon: '🍳' },
-    { id: 'lunch', label: 'Pietūs', icon: '🥗' },
-    { id: 'dinner', label: 'Vakarienė', icon: '🍽' },
     { id: 'diet', label: 'Dietos laikiausi', icon: '✅' },
-    ...(todayDay ? [{ id: 'workout', label: TRAINING_PLAN[todayDay].label + ' — ' + TRAINING_PLAN[todayDay].focus, icon: '🏋️' }] : []),
+    { id: 'workout', label: 'Sportas', icon: '🏋️' },
     { id: 'cardio', label: 'Cardio / Vaikščiojimas', icon: '🏃' },
   ];
 
@@ -517,8 +513,7 @@ function toggleCheck(id) {
   dailyLog[today].checklist[id] = !dailyLog[today].checklist[id];
 
   // Check if all done
-  const todayDay = todayTrainingDay();
-  const checks = ['breakfast','lunch','dinner','diet',...(todayDay ? ['workout'] : []),'cardio'];
+  const checks = ['diet','workout','cardio'];
   dailyLog[today].completed = checks.every(c => dailyLog[today].checklist[c]);
 
   save('dailyLog', dailyLog);
@@ -534,9 +529,7 @@ function renderWorkout() {
   const today = todayStr();
   document.getElementById('workoutDate').textContent = formatDate(today);
 
-  // Default to today's day or first
-  const todayDay = todayTrainingDay();
-  if (!activeWorkoutDay) activeWorkoutDay = todayDay || 'monday';
+  if (!activeWorkoutDay) activeWorkoutDay = 'monday';
 
   // Tabs
   let tabsHTML = '';
@@ -544,7 +537,7 @@ function renderWorkout() {
     const plan = TRAINING_PLAN[d];
     const logKey = `${today}_${d}`;
     const hasLog = workoutLog[logKey];
-    tabsHTML += `<button class="day-tab ${d === activeWorkoutDay ? 'active' : ''} ${hasLog ? 'completed' : ''}" onclick="switchWorkoutDay('${d}')">${DAY_LABELS[d]}</button>`;
+    tabsHTML += `<button class="day-tab ${d === activeWorkoutDay ? 'active' : ''} ${hasLog ? 'completed' : ''}" onclick="switchWorkoutDay('${d}')">${plan.focus}</button>`;
   });
   document.getElementById('dayTabs').innerHTML = tabsHTML;
 
@@ -603,15 +596,14 @@ function renderWorkoutDay() {
           <tbody id="sets_${ex.id}">`;
 
         if (sets.length === 0) {
-          // Default sets from target
           const defaultSets = getDefaultSets(ex);
           defaultSets.forEach((s, i) => {
-            html += renderSetRow(ex, i, s.kg, s.reps);
+            html += renderSetRow(ex, i, s.kg, s.reps, s.done);
           });
           workoutSets[ex.id] = defaultSets;
         } else {
           sets.forEach((s, i) => {
-            html += renderSetRow(ex, i, s.kg, s.reps);
+            html += renderSetRow(ex, i, s.kg, s.reps, s.done);
           });
         }
 
@@ -640,19 +632,43 @@ function renderWorkoutDay() {
     });
   });
 
-  html += `<button class="save-btn" onclick="saveWorkout()">💾 Išsaugoti treniruotę</button>`;
+  html += `
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button class="icon-btn" onclick="startRestTimer(60)" style="flex:1">⏱ 60s</button>
+      <button class="icon-btn" onclick="startRestTimer(90)" style="flex:1">⏱ 90s</button>
+      <button class="icon-btn" onclick="startRestTimer(120)" style="flex:1">⏱ 2min</button>
+    </div>
+    <button class="save-btn" onclick="saveWorkout()" style="margin-top:10px">💾 Išsaugoti treniruotę</button>
+  `;
 
   document.getElementById('workoutContent').innerHTML = html;
 }
 
-function renderSetRow(ex, i, kg, reps) {
-  return `<tr>
-    <td style="color:var(--text2);font-size:13px">${i+1}</td>
-    ${!ex.bodyweight ? `<td><input class="set-input" type="number" value="${kg || ''}" placeholder="—"
-      oninput="updateSet('${ex.id}', ${i}, 'kg', this.value)"></td>` : ''}
-    <td><input class="set-input" type="number" value="${reps || ''}" placeholder="—"
-      oninput="updateSet('${ex.id}', ${i}, 'reps', this.value)"></td>
-    <td><button class="remove-set-btn" onclick="removeSet('${ex.id}', ${i})">×</button></td>
+function renderSetRow(ex, i, kg, reps, done) {
+  const kgVal = kg || 0;
+  const repsVal = reps || 0;
+  const rowStyle = done ? 'opacity:.5' : '';
+  return `<tr style="${rowStyle}">
+    <td style="color:var(--text2);font-size:13px;width:28px">${i+1}</td>
+    ${!ex.bodyweight ? `<td>
+      <div class="stepper">
+        <button class="step-btn" onclick="stepVal('${ex.id}',${i},'kg',-2.5)">−</button>
+        <span class="step-val" id="kg_${ex.id}_${i}">${kgVal||'—'}</span>
+        <button class="step-btn" onclick="stepVal('${ex.id}',${i},'kg',2.5)">+</button>
+      </div>
+    </td>` : ''}
+    <td>
+      <div class="stepper">
+        <button class="step-btn" onclick="stepVal('${ex.id}',${i},'reps',-1)">−</button>
+        <span class="step-val" id="reps_${ex.id}_${i}">${repsVal||'—'}</span>
+        <button class="step-btn" onclick="stepVal('${ex.id}',${i},'reps',1)">+</button>
+      </div>
+    </td>
+    <td style="width:36px;text-align:center">
+      <button class="done-btn ${done ? 'done-active' : ''}" onclick="toggleSetDone('${ex.id}',${i})">
+        ${done ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+      </button>
+    </td>
   </tr>`;
 }
 
@@ -669,6 +685,25 @@ function updateSet(exId, idx, field, val) {
   if (!workoutSets[exId]) workoutSets[exId] = [];
   if (!workoutSets[exId][idx]) workoutSets[exId][idx] = {};
   workoutSets[exId][idx][field] = val ? parseFloat(val) : null;
+}
+
+function stepVal(exId, idx, field, delta) {
+  if (!workoutSets[exId]) workoutSets[exId] = [];
+  if (!workoutSets[exId][idx]) workoutSets[exId][idx] = { kg: null, reps: null, done: false };
+  const cur = workoutSets[exId][idx][field] || 0;
+  const next = Math.max(0, +(cur + delta).toFixed(1));
+  workoutSets[exId][idx][field] = next;
+  const el = document.getElementById(`${field}_${exId}_${idx}`);
+  if (el) el.textContent = next || '—';
+}
+
+function toggleSetDone(exId, idx) {
+  if (!workoutSets[exId] || !workoutSets[exId][idx]) return;
+  workoutSets[exId][idx].done = !workoutSets[exId][idx].done;
+  // Check if all sets done → start rest timer
+  const allDone = workoutSets[exId].every(s => s.done);
+  renderWorkoutDay();
+  if (allDone) startRestTimer();
 }
 
 function addSet(exId, bodyweight, time) {
@@ -939,7 +974,7 @@ function renderSettings() {
   document.getElementById('settingsInfo').innerHTML = `
     <div class="settings-row"><span class="settings-label">Starto svoris</span><span class="settings-val">${config.startWeight} kg</span></div>
     <div class="settings-row"><span class="settings-label">Tikslinis svoris</span><span class="settings-val">${config.goalWeight} kg</span></div>
-    <div class="settings-row"><span class="settings-label">Trukm&eogon;</span><span class="settings-val">${config.weeks} sav.</span></div>
+    <div class="settings-row"><span class="settings-label">Trukm&eogon;</span><span class="settings-val">${config.weeks} savaičių</span></div>
     <div class="settings-row"><span class="settings-label">Pradžia</span><span class="settings-val">${config.startDate}</span></div>
     <div class="settings-row"><span class="settings-label">Pabaiga</span><span class="settings-val">${end.toISOString().split('T')[0]}</span></div>
   `;
@@ -973,9 +1008,85 @@ function importData(event) {
 }
 
 function resetData() {
-  if (!confirm('Ar tikrai nori ištrinti VISUS duomenis? Šio veiksmo negalima atšaukti.')) return;
+  // confirm() blocked in some contexts - use custom modal
+  const el = document.getElementById('resetConfirm');
+  if (el) el.style.display = 'flex';
+}
+async function resetDataConfirmed() {
+  // Delete from Supabase
+  for (const id of ['config','dailyLog','workoutLog','weightLog']) {
+    try {
+      await fetch(`${SB_URL}/rest/v1/app_data?id=eq.${id}`, {
+        method: 'DELETE',
+        headers: { 'apikey': SB_KEY, 'Authorization': 'Bearer ' + SB_KEY }
+      });
+    } catch(e) {}
+  }
+  // Clear LocalStorage
   localStorage.clear();
   location.reload();
+}
+function resetDataCancel() {
+  const el = document.getElementById('resetConfirm');
+  if (el) el.style.display = 'none';
+}
+
+// ==================== REST TIMER ====================
+let restInterval = null;
+let restSeconds = 0;
+
+function startRestTimer(secs) {
+  // Show rest timer modal
+  secs = secs || 90;
+  restSeconds = secs;
+  const el = document.getElementById('restTimerModal');
+  if (el) { el.style.display = 'flex'; updateRestDisplay(); }
+  clearInterval(restInterval);
+  restInterval = setInterval(() => {
+    restSeconds--;
+    updateRestDisplay();
+    if (restSeconds <= 0) {
+      clearInterval(restInterval);
+      // Vibrate if supported
+      if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+      document.getElementById('restTimerLabel').textContent = '✅ Laikas!';
+    }
+  }, 1000);
+}
+
+function updateRestDisplay() {
+  const m = Math.floor(Math.abs(restSeconds) / 60);
+  const s = Math.abs(restSeconds) % 60;
+  const sign = restSeconds < 0 ? '+' : '';
+  document.getElementById('restTimerDisplay').textContent = `${sign}${m}:${s.toString().padStart(2,'0')}`;
+  const pct = Math.max(0, restSeconds / (document.getElementById('restTimerModal').dataset.total || 90));
+  const circ = document.getElementById('restCircle');
+  if (circ) {
+    const len = 2 * Math.PI * 54;
+    circ.style.strokeDashoffset = len * (1 - pct);
+  }
+}
+
+function stopRestTimer() {
+  clearInterval(restInterval);
+  const el = document.getElementById('restTimerModal');
+  if (el) el.style.display = 'none';
+}
+
+function setRestTime(secs) {
+  clearInterval(restInterval);
+  restSeconds = secs;
+  document.getElementById('restTimerModal').dataset.total = secs;
+  updateRestDisplay();
+  restInterval = setInterval(() => {
+    restSeconds--;
+    updateRestDisplay();
+    if (restSeconds <= 0) {
+      clearInterval(restInterval);
+      if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+      document.getElementById('restTimerLabel').textContent = '✅ Laikas!';
+    }
+  }, 1000);
 }
 
 // ==================== SYNC UI ====================
@@ -1013,6 +1124,42 @@ function renderAll() {
   }
 })();
 </script>
+
+<!-- RESET CONFIRM MODAL -->
+<div id="resetConfirm" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#1a1a1a;border:1px solid #333;border-radius:16px;padding:24px;width:100%;max-width:320px;text-align:center">
+    <div style="font-size:32px;margin-bottom:12px">🗑</div>
+    <div style="font-size:17px;font-weight:800;margin-bottom:8px">Ištrinti visus duomenis?</div>
+    <div style="font-size:13px;color:#888;margin-bottom:24px">Šio veiksmo negalima atšaukti.</div>
+    <div style="display:flex;gap:10px">
+      <button onclick="resetDataCancel()" style="flex:1;background:#222;border:1px solid #333;border-radius:10px;color:#e8e8e8;font-size:15px;font-weight:700;padding:13px;cursor:pointer">Atšaukti</button>
+      <button onclick="resetDataConfirmed()" style="flex:1;background:#f87171;border:none;border-radius:10px;color:#fff;font-size:15px;font-weight:700;padding:13px;cursor:pointer">Ištrinti</button>
+    </div>
+  </div>
+</div>
+
+<!-- REST TIMER MODAL -->
+<div id="restTimerModal" class="rest-modal" style="display:none" data-total="90">
+  <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text2)">Poilsis</div>
+  <div class="rest-circle-wrap">
+    <svg class="rest-svg" viewBox="0 0 120 120">
+      <circle cx="60" cy="60" r="54" fill="none" stroke="var(--border)" stroke-width="8"/>
+      <circle id="restCircle" cx="60" cy="60" r="54" fill="none" stroke="var(--accent)" stroke-width="8"
+        stroke-linecap="round"
+        stroke-dasharray="339.3"
+        stroke-dashoffset="0"
+        style="transition:stroke-dashoffset .9s linear"/>
+    </svg>
+    <div class="rest-time" id="restTimerDisplay">1:30</div>
+  </div>
+  <div class="rest-label" id="restTimerLabel">Pailsėk ir ruoškis kitam setui</div>
+  <div class="rest-btns">
+    <button class="rest-preset" onclick="setRestTime(60)">60s</button>
+    <button class="rest-preset" onclick="setRestTime(90)">90s</button>
+    <button class="rest-preset" onclick="setRestTime(120)">2min</button>
+  </div>
+  <button onclick="stopRestTimer()" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:15px;font-weight:700;padding:12px 32px;cursor:pointer">Praleisti</button>
+</div>
 <script src="js/app.js"></script>
 </body>
 </html>

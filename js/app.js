@@ -292,7 +292,7 @@ function renderDashboard() {
       } else if (diff > 0.3) {
         status.innerHTML = `<span style="color:var(--red);font-size:13px;font-weight:800">+${diff} kg<br><span style="font-size:10px">atsilieki</span></span>`;
       } else {
-        status.innerHTML = `<span style="color:var(--text2);font-size:13px;font-weight:800">= planą</span>`;
+        status.innerHTML = `<span style="color:var(--text2);font-size:13px;font-weight:800">✓ pagal planą</span>`;
       }
     }
   }

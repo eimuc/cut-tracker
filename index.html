@@ -91,15 +91,13 @@
 
   <div class="card">
     <div class="card-title">Pridėti įrašą</div>
-    <div style="display:flex;gap:10px;margin-bottom:10px">
-      <div style="flex:1;min-width:0">
-        <div class="input-label">Data</div>
-        <input type="date" class="text-input" id="weightDate" style="width:100%;min-width:0">
-      </div>
-      <div style="flex:1;min-width:0">
-        <div class="input-label">Svoris (kg)</div>
-        <input type="number" class="text-input" id="weightVal" placeholder="80.5" step="0.1" style="width:100%;min-width:0">
-      </div>
+    <div class="input-group" style="margin-bottom:10px">
+      <div class="input-label">Data</div>
+      <input type="date" class="text-input" id="weightDate">
+    </div>
+    <div class="input-group" style="margin-bottom:10px">
+      <div class="input-label">Svoris (kg)</div>
+      <input type="number" class="text-input" id="weightVal" placeholder="80.5" step="0.1">
     </div>
     <button class="add-btn" onclick="addWeight()" style="width:100%">Pridėti</button>
   </div>
@@ -464,7 +462,7 @@ function renderDashboard() {
       } else if (diff > 0.3) {
         status.innerHTML = `<span style="color:var(--red);font-size:13px;font-weight:800">+${diff} kg<br><span style="font-size:10px">atsilieki</span></span>`;
       } else {
-        status.innerHTML = `<span style="color:var(--text2);font-size:13px;font-weight:800">= planą</span>`;
+        status.innerHTML = `<span style="color:var(--text2);font-size:13px;font-weight:800">✓ pagal planą</span>`;
       }
     }
   }
